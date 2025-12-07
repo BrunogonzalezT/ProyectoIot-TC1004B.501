@@ -3,7 +3,6 @@ from mysql.connector import Error
 import pandas as pd
 import streamlit as st
 
-# --- 1. CONFIGURACIÓN DE CONEXIÓN ---
 def get_db_connection():
     """Crea y devuelve una conexión a la base de datos MySQL"""
     try:
@@ -18,7 +17,7 @@ def get_db_connection():
         st.error(f"Error al conectar a la base de datos: {e}")
         return None
 
-# --- 2. OBTENER LISTA DE ESTACIONES (Para el selector) ---
+
 def get_all_stations():
     """Devuelve una lista de diccionarios con ID y Nombre de todas las estaciones"""
     conn = get_db_connection()
@@ -36,7 +35,7 @@ def get_all_stations():
                 conn.close()
     return []
 
-# --- 3. OBTENER DATOS HISTÓRICOS (La función que faltaba) ---
+
 def get_data(table_name, station_id, start_date, end_date):
     """
     Obtiene los datos históricos de una tabla específica (ej. Lectura_Temperatura)
@@ -46,8 +45,7 @@ def get_data(table_name, station_id, start_date, end_date):
     conn = get_db_connection()
     if conn:
         try:
-            # Query con JOIN: Unimos la tabla de lecturas con la tabla Sensor
-            # para poder filtrar por el ID de la Estación.
+
             query = f"""
                 SELECT L.Timestamp as Fecha, L.Valor
                 FROM {table_name} L
@@ -57,19 +55,18 @@ def get_data(table_name, station_id, start_date, end_date):
                 ORDER BY L.Timestamp ASC
             """
             
-            # Usamos pandas para leer SQL directamente (es más rápido y limpio para gráficas)
+
             df = pd.read_sql(query, conn, params=(station_id, start_date, end_date))
             return df
             
         except Error as e:
             st.error(f"Error al obtener datos de {table_name}: {e}")
-            return pd.DataFrame() # Retorna vacío si hay error
+            return pd.DataFrame() 
         finally:
             if conn.is_connected():
                 conn.close()
     return pd.DataFrame()
 
-# --- 4. OBTENER UBICACIONES (Para el Mapa) ---
 def obtener_ubicaciones():
     """Obtiene latitud, longitud y nombre para el mapa"""
     conn = get_db_connection()
@@ -82,12 +79,12 @@ def obtener_ubicaciones():
             
             df = pd.DataFrame(data)
             
-            # --- CORRECCIÓN CRÍTICA ---
+
             if not df.empty:
-                # Convertimos explícitamente a números flotantes
+
                 df['lat'] = df['lat'].astype(float)
                 df['lon'] = df['lon'].astype(float)
-                # Eliminamos filas vacías por si alguna estación no tiene coordenadas
+       
                 df = df.dropna(subset=['lat', 'lon'])
             
             return df
@@ -100,7 +97,6 @@ def obtener_ubicaciones():
                 conn.close()
     return pd.DataFrame()
 
-# --- 5. OBTENER ÚLTIMO VALOR (Para los KPIs/Tarjetas) ---
 def obtener_ultimo_valor(tabla, station_id):
     """Obtiene el dato más reciente de una estación para mostrarlo en grande"""
     conn = get_db_connection()
@@ -108,7 +104,7 @@ def obtener_ultimo_valor(tabla, station_id):
     if conn:
         try:
             cursor = conn.cursor(dictionary=True)
-            # JOIN para filtrar por estación
+
             query = f"""
                 SELECT L.Valor 
                 FROM {tabla} L
