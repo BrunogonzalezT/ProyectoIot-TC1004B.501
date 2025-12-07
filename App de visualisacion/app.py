@@ -11,7 +11,7 @@ st.markdown("""
         iframe {border: none;}
     </style>
 """, unsafe_allow_html=True)
-# --- CONFIGURACIÓN DE PÁGINA ---
+
 st.set_page_config(
     page_title="Monitor Ambiental IoT",
     page_icon="🌿",
@@ -19,7 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- ESTILOS CSS ---
+
 st.markdown("""
     <style>
     .block-container {padding-top: 1rem; padding-bottom: 0rem;}
@@ -27,13 +27,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- TÍTULO ---
+
 st.title("🌿 Sistema de Monitoreo (BOB)")
 st.markdown("---")
 
-# =========================================================
-# 📍 PANEL LATERAL (SIDEBAR)
-# =========================================================
+
 with st.sidebar:
     st.header("📍 Ubicación de Estaciones")
     
@@ -51,18 +49,18 @@ with st.sidebar:
             zoom=15,
             pitch=0)
 
-        # Capa de puntos
+     
         layer = pdk.Layer(
             "ScatterplotLayer",
             data=df_mapa,
             get_position='[lon, lat]',
-            get_color='[255, 0, 0, 200]',  # Rojo
+            get_color='[255, 0, 0, 200]', 
             get_radius=15,
             pickable=True,
             auto_highlight=True
         )
 
-        # Renderizar mapa con Tooltip
+ 
         st.pydeck_chart(pdk.Deck(
             map_style=None,
             initial_view_state=view_state,
@@ -79,7 +77,7 @@ with st.sidebar:
     
     st.header("🎛️ Filtros de Consulta")
     
-    # Selector de Estación
+    
     stations = get_all_stations()
     station_id = None
     selected_station_name = "Sin Estaciones"
@@ -91,7 +89,7 @@ with st.sidebar:
     else:
         st.error("BD vacía o sin conexión.")
 
-    # Filtro de Fechas
+ 
     st.subheader("📅 Rango de Fechas")
     col_d1, col_d2 = st.columns(2)
     
@@ -101,26 +99,21 @@ with st.sidebar:
     start_date = col_d1.date_input("Inicio", last_week)
     end_date = col_d2.date_input("Fin", today)
 
-# =========================================================
-# 📑 PESTAÑAS PRINCIPALES
-# =========================================================
-# Cambiamos el nombre de la 3ra pestaña a "Estadísticas"
+
 tab_local, tab_nube, tab_stats = st.tabs(["📊 Dashboard Local", "☁️ Visualización Power BI", "📈 Estadísticas Detalladas"])
 
-# ---------------------------------------------------------
-# PESTAÑA 1: LOCAL
-# ---------------------------------------------------------
+
 with tab_local:
     if station_id:
         st.subheader(f"Análisis Local: {selected_station_name}")
         
-        # Obtener últimos valores reales
+    
         last_temp = obtener_ultimo_valor("Lectura_Temperatura", station_id) or "--"
         last_hum = obtener_ultimo_valor("Lectura_Humedad", station_id) or "--"
         last_co2 = obtener_ultimo_valor("Lectura_eCO2", station_id) or "--"
         last_tvoc = obtener_ultimo_valor("Lectura_TVOC", station_id) or "--"
 
-        # KPIs
+ 
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("Temperatura", f"{last_temp} °C", "En vivo")
         col2.metric("Humedad", f"{last_hum} %", "Normal")
@@ -129,7 +122,7 @@ with tab_local:
 
         st.markdown("---")
 
-        # Gráficas
+     
         col_g1, col_g2 = st.columns(2)
         with col_g1:
             st.info("🌡️ Temperatura Histórica")
@@ -164,37 +157,28 @@ with tab_local:
             else:
                 st.warning("Sin datos.")
 
-# ---------------------------------------------------------
-# PESTAÑA 2: POWER BI
-# ---------------------------------------------------------
-# ---------------------------------------------------------
-# PESTAÑA 2: POWER BI (NUBE)
-# ---------------------------------------------------------
+
 with tab_nube:
     st.subheader("☁️ Visualización en la Nube (Azure)")
     
-    # URL Base
+ 
     url_reporte = "https://app.powerbi.com/view?r=eyJrIjoiZTAwNDcyYzYtMDZlOS00NmYyLTkyZmMtZDY5N2E5MTE0N2IzIiwidCI6ImM2NWEzZWE2LTBmN2MtNDAwYi04OTM0LTVhNmRjMTcwNTY0NSIsImMiOjR9"
-    
-    # Columnas para organizar: Texto a la izq, Botón a la der
     col_text, col_btn = st.columns([3, 1])
     
     with col_text:
         st.info("ℹ️ Este dashboard se alimenta en tiempo real desde Azure IoT Hub.")
         
     with col_btn:
-        # Botón para abrir en otra pestaña
+    
         st.link_button("↗️ Abrir en Navegador", url_reporte)
 
-    # Iframe (con el parámetro para ocultar la barra gris)
     st.components.v1.iframe(url_reporte + "&navContentPaneEnabled=false", width=None, height=700, scrolling=True)
-# PESTAÑA 3: ESTADÍSTICAS (¡MEJORADA!)
-# ---------------------------------------------------------
+
 with tab_stats:
     st.subheader("📋 Análisis Estadístico Detallado")
     
     if station_id:
-        # Selector de Variable
+
         col_sel, _ = st.columns([1, 2])
         with col_sel:
             variable_selec = st.selectbox(
@@ -203,18 +187,18 @@ with tab_stats:
                 format_func=lambda x: x.replace("Lectura_", "") # Limpia el nombre en el menú
             )
         
-        # Obtener datos de esa variable
+  
         df_stats = get_data(variable_selec, station_id, start_date, end_date)
         
         if not df_stats.empty:
-            # Cálculos Estadísticos
+
             max_val = df_stats["Valor"].max()
             min_val = df_stats["Valor"].min()
             avg_val = df_stats["Valor"].mean()
             std_dev = df_stats["Valor"].std()
             total_readings = df_stats["Valor"].count()
             
-            # Mostrar Tarjetas de Métricas
+
             st.markdown("#### 📊 Indicadores Clave")
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
             kpi1.metric("Máximo Histórico", f"{max_val:.2f}")
@@ -228,7 +212,7 @@ with tab_stats:
             
             with col_tabla1:
                 st.write("#### 📐 Distribución de Datos (Describe)")
-                # Transponemos (.T) para que se vea mejor la tabla describe
+         
                 st.dataframe(df_stats["Valor"].describe().to_frame().T, use_container_width=True)
                 
                 st.write(f"**Total de lecturas analizadas:** {total_readings}")
